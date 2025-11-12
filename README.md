@@ -1,95 +1,117 @@
 # ESP32-P5-PlotMachine
-A DIY ESP32 adaptation of the Neje laser engraver for pen plotting and generative art.
-# ESP32-Neje-Plotter
 
-![Project Banner](https://via.placeholder.com/800x200/000000/FFFFFF?text=ESP32+Neje+Plotter) <!-- Replace with actual image if available -->
+![Project Banner](https://cdn.tindiemedia.com/images/resize/Dqu5_rL8bkEKBmyn8xzOYmwiXAU=/p/622x415/smart/i/05128/products/2024-06-11T16%3A48%3A38.369Z-20240611_115942.jpg?1718100306)
+
+A DIY ESP32 adaptation of the NEJE laser engraver for pen plotting and generative art.
 
 ## Overview
 
-This project transforms a affordable Neje laser engraver into a versatile plotting machine using an ESP32 microcontroller. By replacing the laser head with a pen, pencil, or other drawing tool, you can create precise drawings, generative art, and even ML-driven designs. The setup includes:
+This project transforms an affordable NEJE laser engraver into a versatile 2D plotting machine using an ESP32 microcontroller. By replacing the laser module with a pen, pencil, or other drawing tool, you can create precise drawings, generative art, and even machine learning-driven designs. The setup integrates GRBL firmware for precise control and p5.js for interactive sketching, with optional ml5.js for AI features like pose detection.
 
-- **Hardware Control**: ESP32 interfaces with the Neje's stepper motors and GRBL firmware for accurate movement.
-- **Web Interface**: Built with [p5.js](https://p5js.org/) for interactive sketching and [ml5.js](https://ml5js.org/) for machine learning features like pose detection to guide the plotter.
-- **Customization**: Easily swap tools for different effects (e.g., ink, charcoal, or 3D printing nozzles).
-
-Perfect for makers, artists, and hobbyists exploring CNC plotting on a budget!
+Ideal for makers, artists, and hobbyists exploring budget-friendly CNC plotting and creative coding!
 
 ## Features
 
-- ESP32-based control for wireless operation.
-- GRBL-compatible commands for G-code execution.
-- p5.js canvas for real-time design preview and export.
-- ml5.js integration for AI-assisted patterns (e.g., neural style transfer or gesture-based drawing).
-- Modular tool head for pens, lasers, or extruders.
-- Open-source hardware schematics and code.
+- **Wireless Control**: ESP32 enables WiFi connectivity for remote operation.
+- **GRBL Compatibility**: Executes G-code for accurate movement and plotting.
+- **p5.js Integration**: Real-time design preview, SVG export, and G-code generation in a web-based canvas.
+- **ml5.js AI Support**: Generate patterns from machine learning models (e.g., gesture-based drawing or neural style transfer).
+- **Modular Design**: Easily swap tools like pens, charcoal, or 3D printing nozzles.
+- **IoT Capabilities**: Add sensors for data-driven plotting via MQTT.
+- **Open-Source**: Full schematics, code, and 3D-printable files included.
 
 ## Hardware Requirements
 
-- Neje laser engraver (e.g., DK-8-KZ model).
+- NEJE laser engraver (e.g., DK-8-KZ, Master 2, or 2S Plus with GRBL support).
 - ESP32 development board (e.g., ESP32-WROOM-32).
-- Stepper motor drivers (A4988 or similar, if modifying).
-- Tool head adapter (3D-printable STL files provided in `/hardware/`).
-- Power supply (12V, matching Neje specs).
-- USB cable for initial flashing; WiFi for runtime control.
+- Stepper motor drivers (A4988 or TMC2209 for modifications).
+- 3D-printable tool head adapter (STL file in `/hardware/tool_head.stl`).
+- 12V power supply matching NEJE specs.
+- Optional: Level shifters, MOSFET for PWM, sensors for IoT.
+- USB cable for initial flashing; WiFi for runtime.
+
+### Wiring Notes
+- Connect ESP32 GPIO to NEJE steppers (e.g., Step X: GPIO 26, Dir X: GPIO 25).
+- PWM for tool control on GPIO 13 (inverted, active low for NEJE).
+- Share common ground and power.
+- For models with built-in ESP32: Use as a WiFi-UART bridge with TX/RX serial.
+
+**Safety Warning**: Always use eye protection, ensure ventilation, and test at low power/speed. Avoid laser operation without proper safeguards, even when converted.
 
 ## Software Setup
 
 ### 1. ESP32 Firmware
-- Install [Arduino IDE](https://www.arduino.cc/en/software) with ESP32 board support.
-- Flash GRBL-ESP32 (forked for Neje compatibility) via `/firmware/` sketches.
-- Connect ESP32 to Neje's control board (pins: TX/RX for serial, GPIO for step/dir/enable).
+- Install the Arduino IDE with ESP32 board support.
+- Flash Grbl_ESP32 or FluidNC (NEJE-compatible fork) from `/firmware/`.
+- Configure GRBL: Enable laser mode (`$32=1`), set steps/mm for calibration.
+- Test via serial monitor (115200 baud): `G28` to home, `G1 X10 Y10 F1000` to move.
 
 ### 2. Web Interface
-- Clone this repo and open `/interface/index.html` in a browser.
-- Uses p5.js for drawing canvas and ml5.js for ML models.
-- Send G-code to ESP32 over WebSerial API (Chrome/Edge recommended).
+- Clone the repo and open `/interface/index.html` in a browser (Chrome/Edge for WebSerial).
+- Use p5.js in SVG mode for vector designs; export with `save()`.
+- Integrate ml5.js for ML: Load models like BodyPix in `/interface/ml_sketch.js`.
+- Convert SVG to G-code using svg2gcode.js; send via WebSocket or API.
 
 ### 3. Dependencies
-- **ESP32**: GRBL-ESP32 library.
-- **Frontend**: p5.js (CDN), ml5.js (CDN), no build tools needed initially.
+- **Firmware**: Grbl_ESP32 library (Arduino Library Manager).
+- **Frontend**: p5.js and ml5.js (via CDN; no build required).
+- **G-code Tools**: Free options like LaserGRBL or UGS for testing.
+
+### IoT Enhancements
+- Integrate sensors (e.g., MQTT for real-time data).
+- Host p5.js on a server for exhibition setups.
+- Use ESP32's web interface for monitoring.
 
 ## Getting Started
 
 1. **Assemble Hardware**:
-   - Follow `/hardware/schematics.pdf` for wiring.
-   - 3D-print the tool adapter from `/hardware/tool_head.stl`.
+   - Follow `/hardware/schematics.pdf` for connections.
+   - Print and attach the tool adapter.
+   - Replace laser with pen; adjust Z-offset for surface contact.
 
-2. **Flash ESP32**:
+2. **Flash Firmware**:
+   - Upload sketch via Arduino IDE.
+   - Verify in serial monitor.
 
 3. **Test Plotting**:
-- Connect via serial monitor: Send `G28` (home) then `G1 X10 Y10` (move).
-- Open web interface, draw a shape, and hit "Plot!"
+   - Home the machine (`G28`).
+   - Sketch in p5.js, generate G-code.
+   - Send via web interface or LaserGRBL.
 
-4. **Advanced: ML Integration**:
-- Load a ml5 model (e.g., BodyPix for pose-to-path conversion).
-- Example sketch in `/interface/ml_sketch.js`.
+4. **ML Integration**:
+   - Load ml5.js model for gesture detection.
+   - Convert inputs to paths and plot dynamically.
 
 ## Usage Examples
 
-- **Simple Plot**: Draw in p5.js editor, export G-code, upload to ESP32.
-- **Generative Art**: Use Perlin noise in p5.js to create organic patterns.
-- **ML-Driven**: Webcam detects hand gestures; ml5.js converts to plot paths.
+- **Simple Sketch**: Draw shapes in p5.js, export G-code, and plot statically.
+- **Generative Patterns**: Apply Perlin noise for organic designs; animate frame-by-frame.
+- **AI-Driven Art**: Use webcam for pose detection; ml5.js generates interactive plots.
 
-![Example Plot](https://via.placeholder.com/400x300/CCCCCC/000000?text=Sample+Pen+Plot) <!-- Add real example image -->
+![Generative Art Example](https://raw.githubusercontent.com/mattdesl/pen-plotter-blog-post/master/images/tess-v3.jpg)
+
+## Troubleshooting
+
+- **Connection Issues**: Check ESP32 IP for WiFi; fallback to serial if needed.
+- **Movement Problems**: Invert directions (`$3`), recalibrate steps/mm.
+- **G-code Errors**: Optimize vectors in p5.js; reduce speed for accuracy.
+- **Common Fixes**: Update firmware, verify permissions, consult logs.
+- Resources: NEJE Wiki, GitHub issues, Reddit (r/lasercutting, r/PlotterArt).
 
 ## Contributing
 
-1. Fork the repo.
-2. Create a feature branch (`git checkout -b feature/amazing-tool`).
-3. Commit changes (`git commit -m 'Add pen adapter support'`).
-4. Push and open a PR.
-
-Issues and ideas welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Fork the repo, create a feature branch (`git checkout -b feature/new-adapter`), commit changes, and open a Pull Request. See [CONTRIBUTING.md](CONTRIBUTING.md) for details. Contributions welcome!
 
 ## License
 
-This project is open-source under the MIT License. See [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- Inspired by [Neje engravers](https://neje.shop/) and [GRBL project](https://github.com/gnea/grbl).
-- Thanks to the p5.js and ml5.js communities for creative tools.
+- Inspired by NEJE[](https://neje.shop/) and GRBL[](https://github.com/gnea/grbl).
+- Thanks to p5.js[](https://p5js.org/) and ml5.js[](https://ml5js.org/) communities.
+- Additional resources: FluidNC GitHub, svg2gcode, YouTube tutorials.
 
 ---
 
-⭐ Star this repo if you plot something cool! Questions? Open an issue.
+⭐ If you build something cool, star the repo and share your creation! Questions? Open an issue.
